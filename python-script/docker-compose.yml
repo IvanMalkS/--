@@ -1,0 +1,16 @@
+services:
+  expert-system:
+    build: .
+    container_name: frontend-expert-system
+    ports:
+      - '8501:8501'
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8501/_stcore/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3

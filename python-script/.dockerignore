@@ -1,0 +1,25 @@
+# Ignore virtual environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Ignore python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ignore streamlit specific
+.streamlit/
+.DS_Store
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore IDE specific
+.vscode/
+.idea/
