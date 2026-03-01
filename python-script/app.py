@@ -33,58 +33,60 @@ with st.form("expert_form", border=True):
     st.subheader("1. Аудитория и География")
     col1, col2 = st.columns(2)
     with col1:
-        q_region = st.radio("Где живут пользователи?", ["Один регион", "Весь мир"])
+        q_region = st.radio("Регион пользователей", ["По всему миру", "В одном регионе/РФ"])
     with col2:
-        q_env = st.radio("Откуда заходят?", ["Из офиса/Дома", "На бегу/Транспорт"])
+        q_env = st.radio("Среда использования", ["Из дома/офиса", "На бегу/в транспорте"])
 
     st.subheader("2. Устройства и Контент")
     col3, col4 = st.columns(2)
     with col3:
-        q_dev = st.radio("Основное устройство?", ["ПК/Ноутбуки", "Телефоны"])
+        q_dev = st.radio("Основной тип устройств", ["Компьютеры/Ноутбуки", "Мобильные телефоны"])
     with col4:
-        q_content = st.radio("Тяжелый контент?", ["Текст", "Много видео"])
+        q_content = st.radio("Тяжесть контента", ["В основном текст", "Много тяжелого (видео/фото)"])
         
     st.subheader("3. Команда и Ресурсы")
     col5, col6 = st.columns(2)
     with col5:
-        q_size = st.radio("Размер команды?", ["Много людей", "Мало людей"])
+        q_size = st.radio("Размер команды", ["Маленькая (1-3 чел.)", "Большая (от 4 чел.)"])
     with col6:
-        q_exp = st.radio("Есть опытные профи?", ["Есть Senior", "Нет опытных"])
+        q_exp = st.radio("Опыт команды", ["Есть Senior", "Нет (Junior/Middle)"])
+        
+    q_ts = st.radio("Строгая типизация (TypeScript)", ["Да", "Нет"])
 
     st.subheader("4. Бизнес-требования")
     col7, col8 = st.columns(2)
     with col7:
-        q_seo = st.radio("Нужно продвижение в поиске?", ["Да (Важно)", "Нет"])
+        q_seo = st.radio("Требования к SEO", ["Да (Важно)", "Нет"])
     with col8:
-        q_time = st.radio("Сроки горят?", ["Есть время", "Срочно"])
+        q_time = st.radio("Сроки горят?", ["Горят сроки (MVP)", "Есть время на качество"])
 
     st.subheader("5. Работа с данными (State)")
     col9, col10 = st.columns(2)
     with col9:
-        q_real = st.radio("Нужен мгновенный чат?", ["Нет", "Да"])
+        q_real = st.radio("Обновление данных в реальном времени", ["Да (чат)", "Нет"])
     with col10:
-        q_offline = st.radio("Нужна работа без интернета?", ["Нет", "Да"])
+        q_offline = st.radio("Оффлайн режим", ["Да", "Нет"])
 
     st.subheader("6. Сервера и Нагрузка")
     col11, col12 = st.columns(2)
     with col11:
-        q_host = st.radio("Бюджет на сервера?", ["Большой", "Ограниченный"])
+        q_host = st.radio("Бюджет на сервера", ["Большой (свои сервера)", "Маленький (облако / serverless)"])
     with col12:
-        q_traffic = st.radio("Будут скачки посетителей?", ["Нет", "Да"])
+        q_traffic = st.radio("Будут ли резкие скачки посетителей?", ["Да", "Нет, стабильно"])
 
     st.subheader("7. Дизайн UI")
     col13, col14 = st.columns(2)
     with col13:
-        q_lib = st.radio("Есть готовый дизайн?", ["Да", "Нет"])
+        q_lib = st.radio("Готовый дизайн", ["Да, готовый", "Нет, свой с нуля"])
     with col14:
-        q_anim = st.radio("Сложные 3D эффекты?", ["Нет", "Да"])
+        q_anim = st.radio("Анимации", ["Да", "Нет"])
 
     st.subheader("8. Мобильность")
-    q_store = st.radio("Нужна публикация в AppStore/GooglePlay?", ["Нет", "Да"])
+    q_store = st.radio("Публикация в сторы (AppStore/GooglePlay)", ["Да", "Нет"])
     
-    native_req = "Не нужен"
+    native_req = "Нет"
     if q_store == "Да":
-        native_req = st.radio("Требуется ли доступ к телефону (Камера/Гео/Контакты)?", ["Не нужен", "Нужен"])
+        native_req = st.radio("Доступ к функциям телефона", ["Да", "Нет"])
 
     st.write("")
     submitted = st.form_submit_button("Рассчитать архитектуру", type="primary", use_container_width=True)
@@ -93,28 +95,29 @@ if submitted:
     
     # Маппинг ответов в ключи экспертной системы
     answers = {
-        'q_region': 'region' if q_region == "Один регион" else 'world',
-        'q_env': 'office' if q_env == "Из офиса/Дома" else 'transport',
-        'q_dev': 'pc' if q_dev == "ПК/Ноутбуки" else 'phone',
-        'q_content': 'text' if q_content == "Текст" else 'video',
+        'q_region': 'world' if q_region == "По всему миру" else 'region',
+        'q_env': 'office' if q_env == "Из дома/офиса" else 'transport',
+        'q_dev': 'pc' if q_dev == "Компьютеры/Ноутбуки" else 'phone',
+        'q_content': 'text' if q_content == "В основном текст" else 'video',
         
-        'q_size': 'many' if q_size == "Много людей" else 'few',
+        'q_size': 'few' if q_size == "Маленькая (1-3 чел.)" else 'many',
         'q_exp': 'yes' if q_exp == "Есть Senior" else 'no',
+        'q_ts': 'yes' if q_ts == "Да" else 'no',
         
         'q_seo': 'yes' if q_seo == "Да (Важно)" else 'no',
-        'q_time': 'time' if q_time == "Есть время" else 'urgent',
+        'q_time': 'urgent' if q_time == "Горят сроки (MVP)" else 'time',
         
-        'q_real': 'yes' if q_real == "Да" else 'no',
+        'q_real': 'yes' if q_real == "Да (чат)" else 'no',
         'q_offline': 'yes' if q_offline == "Да" else 'no',
         
-        'q_host': 'much' if q_host == "Большой" else 'little',
+        'q_host': 'much' if q_host == "Большой (свои сервера)" else 'little',
         'q_traffic': 'yes' if q_traffic == "Да" else 'no',
         
-        'q_lib': 'yes' if q_lib == "Да" else 'no',
+        'q_lib': 'yes' if q_lib == "Да, готовый" else 'no',
         'q_anim': 'yes' if q_anim == "Да" else 'no',
         
         'q_store': 'yes' if q_store == "Да" else 'no',
-        'native_req': 'yes' if native_req == "Нужен" else 'no',
+        'native_req': 'yes' if native_req == "Да" else 'no',
     }
 
     st.divider()
@@ -124,6 +127,7 @@ if submitted:
         engine.reset()
         engine.declare(ProjectSpecs(**answers))
         engine.run()
+        engine.get_final_recommendation()
         
     st.header("Результаты Анализа")
     

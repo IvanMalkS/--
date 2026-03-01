@@ -20,37 +20,38 @@ def start_expert_system():
     answers = {}
     
     # 1. Аудитория и География
-    answers['q_region'] = ask("Где живут пользователи?", "Один регион", 'region', "Весь мир", 'world')
-    answers['q_env'] = ask("Откуда заходят?", "Из офиса/Дома", 'office', "На бегу/Транспорт", 'transport')
+    answers['q_region'] = ask("Регион пользователей", "По всему миру", 'world', "В одном регионе/РФ", 'region')
+    answers['q_env'] = ask("Среда использования", "Из дома/офиса", 'office', "На бегу/в транспорте", 'transport')
 
     # 2. Устройства и Контент
-    answers['q_dev'] = ask("Основное устройство?", "ПК/Ноутбуки", 'pc', "Телефоны", 'phone')
-    answers['q_content'] = ask("Тяжелый контент?", "Текст", 'text', "Много видео", 'video')
+    answers['q_dev'] = ask("Основной тип устройств", "Компьютеры/Ноутбуки", 'pc', "Мобильные телефоны", 'phone')
+    answers['q_content'] = ask("Тяжесть контента", "В основном текст", 'text', "Много тяжелого (видео/фото)", 'video')
 
     # 3. Команда и Ресурсы
-    answers['q_size'] = ask("Размер команды?", "Много людей", 'many', "Мало людей", 'few')
-    answers['q_exp'] = ask("Есть опытные профи?", "Есть Senior", 'yes', "Нет опытных", 'no')
+    answers['q_size'] = ask("Размер команды", "Маленькая (1-3 чел.)", 'few', "Большая (от 4 чел.)", 'many')
+    answers['q_exp'] = ask("Опыт команды", "Есть Senior", 'yes', "Нет (Junior/Middle)", 'no')
+    answers['q_ts'] = ask("Строгая типизация (TypeScript)", "Да", 'yes', "Нет", 'no')
 
     # 4. Бизнес-требования
-    answers['q_seo'] = ask("Нужно продвижение в поиске?", "Да (Важно)", 'yes', "Нет", 'no')
-    answers['q_time'] = ask("Сроки горят?", "Есть время", 'time', "Срочно", 'urgent')
+    answers['q_seo'] = ask("Требования к SEO", "Да (Важно)", 'yes', "Нет", 'no')
+    answers['q_time'] = ask("Сроки горят?", "Горят сроки (MVP)", 'urgent', "Есть время на качество", 'time')
 
     # 5. Работа с данными (State)
-    answers['q_real'] = ask("Нужен мгновенный чат?", "Нет", 'no', "Да", 'yes')
-    answers['q_offline'] = ask("Нужна работа без интернета?", "Нет", 'no', "Да", 'yes')
+    answers['q_real'] = ask("Обновление данных в реальном времени", "Да (чат)", 'yes', "Нет", 'no')
+    answers['q_offline'] = ask("Оффлайн режим", "Да", 'yes', "Нет", 'no')
 
     # 6. Сервера и Нагрузка
-    answers['q_host'] = ask("Бюджет на сервера?", "Большой", 'much', "Ограниченный", 'little')
-    answers['q_traffic'] = ask("Будут скачки посетителей?", "Нет", 'no', "Да", 'yes')
+    answers['q_host'] = ask("Бюджет на сервера", "Большой (свои сервера)", 'much', "Маленький (облако / serverless)", 'little')
+    answers['q_traffic'] = ask("Будут ли резкие скачки посетителей?", "Да", 'yes', "Нет, стабильно", 'no')
 
     # 7. Дизайн UI
-    answers['q_lib'] = ask("Есть готовый дизайн?", "Да", 'yes', "Нет", 'no')
-    answers['q_anim'] = ask("Сложные 3D эффекты?", "Нет", 'no', "Да", 'yes')
+    answers['q_lib'] = ask("Готовый дизайн", "Да, готовый", 'yes', "Нет, свой с нуля", 'no')
+    answers['q_anim'] = ask("Анимации", "Да", 'yes', "Нет", 'no')
 
     # 8. Мобильность
-    answers['q_store'] = ask("Нужна публикация в AppStore/GooglePlay?", "Нет", 'no', "Да", 'yes')
+    answers['q_store'] = ask("Публикация в сторы (AppStore/GooglePlay)", "Да", 'yes', "Нет", 'no')
     if answers['q_store'] == 'yes':
-        answers['native_req'] = ask("Требуется ли доступ к телефону (Камера/Гео/Контакты)?", "Не нужен", 'no', "Нужен", 'yes')
+        answers['native_req'] = ask("Доступ к функциям телефона", "Да", 'yes', "Нет", 'no')
     else:
         answers['native_req'] = 'no'
 
@@ -63,6 +64,7 @@ def start_expert_system():
     engine.reset()
     engine.declare(ProjectSpecs(**answers))
     engine.run()
+    engine.get_final_recommendation()
     
     if not engine.recommendations:
         print("\n[ ОШИБКА ] Система не смогла подобрать архитектуру по введенным параметрам (нет подходящего исхода).")
