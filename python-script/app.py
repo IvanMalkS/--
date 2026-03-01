@@ -21,102 +21,105 @@ st.markdown("""
         font-weight: 600;
         color: #1E293B;
     }
-    .st-emotion-cache-16idsys p {
-        font-size: 1.05rem;
-    }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("Аналитическая Экспертная Система")
-st.markdown("Пожалуйста, ответьте на вопросы ниже. Система логически вычислит и порекомендует оптимальную архитектуру для вашего фронтенд-проекта.")
+st.markdown("Пожалуйста, ответьте на вопросы ниже. Система логически вычислит и порекомендует оптимальный стек и архитектуру для вашего фронтенд-проекта.")
 
 st.divider()
 
 with st.form("expert_form", border=True):
-    st.subheader("Аудитория и География")
+    st.subheader("1. Аудитория и География")
     col1, col2 = st.columns(2)
     with col1:
-        region = st.radio("Где живут ваши пользователи?", ["В одной стране/регионе", "По всему миру"])
+        q_region = st.radio("Где живут пользователи?", ["Один регион", "Весь мир"])
     with col2:
-        env = st.radio("Как чаще заходят на сайт?", ["Из дома/офиса (надежный интернет)", "На бегу/в транспорте"])
+        q_env = st.radio("Откуда заходят?", ["Из офиса/Дома", "На бегу/Транспорт"])
 
-    st.subheader("Устройства и Контент")
+    st.subheader("2. Устройства и Контент")
     col3, col4 = st.columns(2)
     with col3:
-        device = st.radio("Основной тип устройств?", ["Мобильные телефоны", "Компьютеры / Ноутбуки"])
+        q_dev = st.radio("Основное устройство?", ["ПК/Ноутбуки", "Телефоны"])
     with col4:
-        content_heavy = st.radio("Много ли на сайте тяжелого контента (видео)?", ["Да, много", "Нет, в основном текст и картинки"])
+        q_content = st.radio("Тяжелый контент?", ["Текст", "Много видео"])
         
-    st.subheader("Функциональность")
+    st.subheader("3. Команда и Ресурсы")
     col5, col6 = st.columns(2)
     with col5:
-        real_time = st.radio("Нужен ли живой чат или обновление цен?", ["Да", "Нет"])
+        q_size = st.radio("Размер команды?", ["Много людей", "Мало людей"])
     with col6:
-        offline = st.radio("Должен ли сайт работать без интернета?", ["Да", "Нет"])
+        q_exp = st.radio("Есть опытные профи?", ["Есть Senior", "Нет опытных"])
 
-    st.subheader("Инфраструктура")
+    st.subheader("4. Бизнес-требования")
     col7, col8 = st.columns(2)
     with col7:
-        budget = st.radio("Какой бюджет на сервера?", ["Большой (свои сервера)", "Маленький (облачный хостинг)"])
+        q_seo = st.radio("Нужно продвижение в поиске?", ["Да (Важно)", "Нет"])
     with col8:
-        traffic = st.radio("Ожидаются ли резкие скачки посетителей?", ["Да (Например, в Черную пятницу)", "Нет, трафик стабильный"])
+        q_time = st.radio("Сроки горят?", ["Есть время", "Срочно"])
 
-    st.subheader("Дизайн")
+    st.subheader("5. Работа с данными (State)")
     col9, col10 = st.columns(2)
     with col9:
-        design = st.radio("Есть ли готовый UI-шаблон/дизайн?", ["Да, используем готовый", "Нет, рисуем всё с нуля"])
+        q_real = st.radio("Нужен мгновенный чат?", ["Нет", "Да"])
     with col10:
-        anim = st.radio("Будут ли сложные 3D-эффекты?", ["Да", "Нет"])
+        q_offline = st.radio("Нужна работа без интернета?", ["Нет", "Да"])
 
-    st.subheader("Команда и Ресурсы")
+    st.subheader("6. Сервера и Нагрузка")
     col11, col12 = st.columns(2)
     with col11:
-        team_size = st.radio("Каков размер вашей команды?", ["Большая (от 4 человек)", "Маленькая (1-3 человека)"])
+        q_host = st.radio("Бюджет на сервера?", ["Большой", "Ограниченный"])
     with col12:
-        team_exp = st.radio("Есть ли в команде опытные Senior-разработчики?", ["Да", "Нет"])
+        q_traffic = st.radio("Будут скачки посетителей?", ["Нет", "Да"])
 
-    st.subheader("Бизнес-требования")
+    st.subheader("7. Дизайн UI")
     col13, col14 = st.columns(2)
     with col13:
-        seo = st.radio("Важно ли продвижение в поисковиках (SEO)?", ["Критично важно", "Не важно"])
+        q_lib = st.radio("Есть готовый дизайн?", ["Да", "Нет"])
     with col14:
-        deadline = st.radio("Горят ли сроки?", ["Да, нужно быстрее сделать MVP", "Нет, есть время сделать качественно"])
+        q_anim = st.radio("Сложные 3D эффекты?", ["Нет", "Да"])
 
-    st.subheader("Мобильное приложение")
-    is_mobile = st.radio("Планируется ли мобильное приложение?", ["Да", "Нет"])
-    native_req = "Нет"
-    if is_mobile == "Да":
-        native_req = st.radio("Требуется ли доступ к железу (Камера, GPS, Пуши)?", ["Да", "Нет"])
+    st.subheader("8. Мобильность")
+    q_store = st.radio("Нужна публикация в AppStore/GooglePlay?", ["Нет", "Да"])
+    
+    native_req = "Не нужен"
+    if q_store == "Да":
+        native_req = st.radio("Требуется ли доступ к телефону (Камера/Гео/Контакты)?", ["Не нужен", "Нужен"])
 
     st.write("")
     submitted = st.form_submit_button("Рассчитать архитектуру", type="primary", use_container_width=True)
 
-
 if submitted:
-    def t(val, opt1): return '1' if val == opt1 else '2'
     
+    # Маппинг ответов в ключи экспертной системы
     answers = {
-        'region': t(region, "В одной стране/регионе"),
-        'env': t(env, "Из дома/офиса (надежный интернет)"),
-        'device': t(device, "Мобильные телефоны"),
-        'content_heavy': t(content_heavy, "Да, много"),
-        'real_time': t(real_time, "Да"),
-        'offline': t(offline, "Да"),
-        'budget': t(budget, "Большой (свои сервера)"),
-        'traffic': t(traffic, "Да (Например, в Черную пятницу)"),
-        'design': t(design, "Да, используем готовый"),
-        'anim': t(anim, "Да"),
-        'team_size': t(team_size, "Большая (от 4 человек)"),
-        'team_exp': t(team_exp, "Да"),
-        'seo': t(seo, "Критично важно"),
-        'deadline': t(deadline, "Да, нужно быстрее сделать MVP"),
-        'is_mobile': t(is_mobile, "Да"),
-        'native_req': t(native_req, "Да") if is_mobile == "Да" else "2"
+        'q_region': 'region' if q_region == "Один регион" else 'world',
+        'q_env': 'office' if q_env == "Из офиса/Дома" else 'transport',
+        'q_dev': 'pc' if q_dev == "ПК/Ноутбуки" else 'phone',
+        'q_content': 'text' if q_content == "Текст" else 'video',
+        
+        'q_size': 'many' if q_size == "Много людей" else 'few',
+        'q_exp': 'yes' if q_exp == "Есть Senior" else 'no',
+        
+        'q_seo': 'yes' if q_seo == "Да (Важно)" else 'no',
+        'q_time': 'time' if q_time == "Есть время" else 'urgent',
+        
+        'q_real': 'yes' if q_real == "Да" else 'no',
+        'q_offline': 'yes' if q_offline == "Да" else 'no',
+        
+        'q_host': 'much' if q_host == "Большой" else 'little',
+        'q_traffic': 'yes' if q_traffic == "Да" else 'no',
+        
+        'q_lib': 'yes' if q_lib == "Да" else 'no',
+        'q_anim': 'yes' if q_anim == "Да" else 'no',
+        
+        'q_store': 'yes' if q_store == "Да" else 'no',
+        'native_req': 'yes' if native_req == "Нужен" else 'no',
     }
 
     st.divider()
     
-    with st.spinner("Анализ данных алгоритмом Rete..."):
+    with st.spinner("Анализ данных..."):
         engine = FrontendExpert()
         engine.reset()
         engine.declare(ProjectSpecs(**answers))
@@ -127,11 +130,16 @@ if submitted:
     if engine.recommendations:
         for idx, rec in enumerate(engine.recommendations):
             st.markdown(f"### Вариант {idx+1}: {rec['stack']}")
-            st.markdown(f"**Обоснование Экспертной Системой:**")
-            st.info(rec['reason'])
+            
+            with st.expander("Посмотреть обоснование экспертной системы", expanded=True):
+                st.info(rec['reason'])
             st.write("")
             
-        if len(engine.recommendations) > 1:
-            st.caption("Обратите внимание: система выявила несколько подходящих вариантов, так как в ваших требованиях присутствуют противоречащие факторы (например, могут одновременно требоваться легковесный UI и архитектура для мощной команды с большим стейтом).")
+        if len(engine.recommendations) >= 1:
+            st.caption("Обратите внимание: система выявила наиболее подходящие варианты, основываясь на графе принятия решений.")
+            
+        with st.expander("Журнал логических выводов (Logs)"):
+            for log in engine.logs:
+                st.write(f"- {log}")
     else:
-        st.error("Система не смогла подобрать однозначный стек под заданные требования. Попробуйте изменить некоторые параметры.")
+        st.error("Система не смогла подобрать однозначный стек, так как не был активирован ни один из финальных узлов (вероятно, уникальное пересечение, не описанное в графе).")

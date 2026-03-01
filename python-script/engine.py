@@ -17,142 +17,209 @@ class FrontendExpert(KnowledgeEngine):
     def __init__(self):
         super().__init__()
         self.recommendations = []
+        self.logs = []
+
+    def _log(self, text):
+        self.logs.append(text)
+        print(text)
 
     # ==========================================
-    # УРОВЕНЬ 2: ПЕРВИЧНЫЕ СЛИЯНИЯ (Система вычисляет сама)
+    # УРОВЕНЬ 1: КАЧЕСТВО СЕТИ И СИЛА КОМАНДЫ
     # ==========================================
 
-    # 1. Вычисление качества сети (NET_QUAL)
-    @Rule(OR(ProjectSpecs(region='2'), ProjectSpecs(env='2')))
+    @Rule(OR(ProjectSpecs(q_region='world'), ProjectSpecs(q_env='transport')))
     def net_bad(self):
         self.declare(Fact(net_qual='bad'))
-        print(": Вычисляю качество сети... -> ПЛОХОЕ (Влияет удаленный регион или мобильная среда)")
+        self._log("Вычисляю качество сети: Плохое (Широкая гео-зона или мобильная среда)")
 
-    @Rule(AND(ProjectSpecs(region='1'), ProjectSpecs(env='1')))
+    @Rule(AND(ProjectSpecs(q_region='region'), ProjectSpecs(q_env='office')))
     def net_good(self):
         self.declare(Fact(net_qual='good'))
-        print(": Вычисляю качество сети... -> ХОРОШЕЕ (Локальный сервер и стационарная среда)")
+        self._log("Вычисляю качество сети: Хорошее (Локальный регион и домашняя/офисная среда)")
 
-    # 2. Вычисление силы команды (TEAM_CAP)
-    @Rule(OR(ProjectSpecs(team_size='2'), ProjectSpecs(team_exp='2')))
+    @Rule(OR(ProjectSpecs(q_size='few'), ProjectSpecs(q_exp='no')))
     def team_weak(self):
         self.declare(Fact(team_cap='weak'))
-        print(": Оцениваю емкость команды... -> НИЗКАЯ (Нехватка людей или опыта)")
+        self._log("Вычисляю силу команды: Слабая (Нехватка разработчиков или опыта)")
 
-    @Rule(AND(ProjectSpecs(team_size='1'), ProjectSpecs(team_exp='1')))
+    @Rule(AND(ProjectSpecs(q_size='many'), ProjectSpecs(q_exp='yes')))
     def team_strong(self):
         self.declare(Fact(team_cap='strong'))
-        print(": Оцениваю емкость команды... -> ВЫСОКАЯ (Большая опытная команда)")
+        self._log("Вычисляю силу команды: Сильная (Достаточная команда с наличием Senior-разработчиков)")
 
     # ==========================================
-    # УРОВЕНЬ 3 и 4: СЛОЖНЫЕ ВЫЧИСЛЕНИЯ (Промежуточные слои)
+    # УРОВЕНЬ 2: МОЩНОСТЬ КЛИЕНТА И РИСК-ПРОФИЛЬ
     # ==========================================
 
-    # 3. Возможности пользователя (CLIENT_POW)
-    @Rule(AND(Fact(net_qual='bad'), ProjectSpecs(device='1')))
+    @Rule(OR(Fact(net_qual='bad'), ProjectSpecs(q_dev='phone')))
     def client_weak(self):
         self.declare(Fact(client_pow='weak'))
-        print(": Слияние (Сеть + Устройство) -> МОЩНОСТЬ КЛИЕНТА СЛАБАЯ")
+        self._log("Вычисляю мощность клиента: Слабая (Мобильные устройства или плохая сеть)")
 
-    @Rule(OR(Fact(net_qual='good'), ProjectSpecs(device='2')))
+    @Rule(AND(Fact(net_qual='good'), ProjectSpecs(q_dev='pc')))
     def client_strong(self):
         self.declare(Fact(client_pow='strong'))
-        print(": Слияние (Сеть + Устройство) -> МОЩНОСТЬ КЛИЕНТА ВЫСОКАЯ")
+        self._log("Вычисляю мощность клиента: Сильная (Десктоп и хорошая сеть)")
 
-    # 4. Допустимая тяжесть сайта (PERF_CALC)
-    @Rule(OR(Fact(client_pow='weak'), ProjectSpecs(content_heavy='1')))
-    def perf_light(self):
-        self.declare(Fact(perf_calc='light'))
-        print(": Анализ производительности -> ТРЕБУЕТСЯ ЛЕГКИЙ САЙТ (Жесткий бюджет JS)")
+    @Rule(Fact(team_cap='weak'))
+    def risk_high(self):
+        self.declare(Fact(risk_calc='high'))
+        self._log("Риск-профиль: Высокий (Команда со слабым потенциалом)")
 
-    @Rule(AND(Fact(client_pow='strong'), ProjectSpecs(content_heavy='2')))
-    def perf_heavy(self):
-        self.declare(Fact(perf_calc='heavy'))
-        print(": Анализ производительности -> ДОПУСТИМ ТЯЖЕЛЫЙ САЙТ")
+    @Rule(Fact(team_cap='strong'))
+    def risk_low(self):
+        self.declare(Fact(risk_calc='low'))
+        self._log("Риск-профиль: Низкий (Сильная опытная команда)")
 
-    # 5. Право на ошибку / Культура (RISK_CALC -> CULTURE)
-    @Rule(AND(Fact(team_cap='weak'), ProjectSpecs(deadline='1')))
+    # ==========================================
+    # УРОВЕНЬ 3: ТЯЖЕСТЬ САЙТА И КУЛЬТУРА
+    # ==========================================
+
+    @Rule(OR(Fact(client_pow='weak'), ProjectSpecs(q_content='video')))
+    def perf_critical(self):
+        self.declare(Fact(perf_calc='critical'))
+        self._log("Тяжесть сайта: Критическая (Слабый клиент или тяжелый медиаконтент, нужна максимальная оптимизация)")
+
+    @Rule(AND(Fact(client_pow='strong'), ProjectSpecs(q_content='text')))
+    def perf_normal(self):
+        self.declare(Fact(perf_calc='normal'))
+        self._log("Тяжесть сайта: Норма (Менее строгие требования к производительности)")
+
+    @Rule(OR(Fact(risk_calc='high'), ProjectSpecs(q_time='urgent')))
     def culture_fast(self):
         self.declare(Fact(culture='fast'))
-        print(": Анализ рисков -> ВЫБРАН ПОДХОД MVP (Сроки горят, ресурсов мало)")
+        self._log("Культура: Быстро (Срочность или высокие риски обязывают выбрать MVP или быстрый путь)")
 
-    @Rule(OR(Fact(team_cap='strong'), ProjectSpecs(deadline='2')))
-    def culture_strict(self):
-        self.declare(Fact(culture='strict'))
-        print(": Анализ рисков -> ВЫБРАНА СТРОГАЯ АРХИТЕКТУРА (Есть ресурсы и время)")
-
-    # ==========================================
-    # УРОВЕНЬ 5: 6 ФИНАЛЬНЫХ СТОЛПОВ
-    # ==========================================
-
-    # СТОЛП 1: Рендеринг (RENDER_MODE)
-    @Rule(AND(Fact(perf_calc='light'), ProjectSpecs(seo='1')))
-    def render_ssg(self): self.declare(Fact(render_mode='SSG'))
-    
-    @Rule(AND(Fact(perf_calc='heavy'), ProjectSpecs(seo='1')))
-    def render_ssr(self): self.declare(Fact(render_mode='SSR'))
-    
-    @Rule(ProjectSpecs(seo='2'))
-    def render_spa(self): self.declare(Fact(render_mode='SPA'))
-
-    # СТОЛП 2: Данные (STATE_ARCH)
-    @Rule(OR(ProjectSpecs(real_time='1'), ProjectSpecs(offline='1')))
-    def state_complex(self): self.declare(Fact(state_arch='Complex'))
-    
-    @Rule(AND(ProjectSpecs(real_time='2'), ProjectSpecs(offline='2')))
-    def state_simple(self): self.declare(Fact(state_arch='Simple'))
-
-    # СТОЛП 3: Инфраструктура (INFRA_TYPE)
-    @Rule(AND(ProjectSpecs(budget='2'), ProjectSpecs(traffic='1')))
-    def infra_serverless(self): self.declare(Fact(infra_type='Serverless'))
-    
-    @Rule(OR(ProjectSpecs(budget='1'), ProjectSpecs(traffic='2')))
-    def infra_server(self): self.declare(Fact(infra_type='Server'))
-
-    # СТОЛП 4: Дизайн (UI_PATTERN)
-    @Rule(AND(ProjectSpecs(design='1'), ProjectSpecs(anim='2')))
-    def ui_template(self): self.declare(Fact(ui_pattern='Template'))
-    
-    @Rule(OR(ProjectSpecs(design='2'), ProjectSpecs(anim='1')))
-    def ui_custom(self): self.declare(Fact(ui_pattern='Custom'))
-
-    # СТОЛП 5: Мобильность (MOBILE_STRAT) - Пропускаемая ветка
-    @Rule(ProjectSpecs(is_mobile='2'))
-    def mobile_web(self): self.declare(Fact(mobile_strat='Web_Only'))
-    
-    @Rule(AND(ProjectSpecs(is_mobile='1'), ProjectSpecs(native_req='2')))
-    def mobile_pwa(self): self.declare(Fact(mobile_strat='PWA'))
-    
-    @Rule(AND(ProjectSpecs(is_mobile='1'), ProjectSpecs(native_req='1')))
-    def mobile_native(self): self.declare(Fact(mobile_strat='Native'))
+    @Rule(AND(Fact(risk_calc='low'), ProjectSpecs(q_time='time')))
+    def culture_reliable(self):
+        self.declare(Fact(culture='reliable'))
+        self._log("Культура: Надежно (Есть время и ресурсы для корпоративной архитектуры)")
 
     # ==========================================
-    # УРОВЕНЬ 6: ФИНАЛЬНЫЙ СТЕК (Вершина)
+    # УРОВЕНЬ 4: СТОЛПЫ (СПОСОБ ЗАГРУЗКИ, ДАННЫЕ, СЕРВЕРА, ДИЗАЙН, МОБИЛЬНОСТЬ)
     # ==========================================
 
-    @Rule(Fact(mobile_strat='Native'))
+    @Rule(AND(Fact(perf_calc='critical'), ProjectSpecs(q_seo='yes')))
+    def render_ssg(self):
+        self.declare(Fact(render='SSG'))
+
+    @Rule(AND(Fact(perf_calc='normal'), ProjectSpecs(q_seo='yes')))
+    def render_ssr(self):
+        self.declare(Fact(render='SSR'))
+
+    @Rule(ProjectSpecs(q_seo='no'))
+    def render_spa(self):
+        self.declare(Fact(render='SPA'))
+
+    @Rule(OR(ProjectSpecs(q_real='yes'), ProjectSpecs(q_offline='yes')))
+    def state_complex(self):
+        self.declare(Fact(state='Complex'))
+
+    @Rule(AND(ProjectSpecs(q_real='no'), ProjectSpecs(q_offline='no')))
+    def state_simple(self):
+        self.declare(Fact(state='Simple'))
+
+    @Rule(AND(ProjectSpecs(q_host='little'), ProjectSpecs(q_traffic='yes')))
+    def infra_cloud(self):
+        self.declare(Fact(infra='Cloud'))
+
+    @Rule(OR(ProjectSpecs(q_host='much'), ProjectSpecs(q_traffic='no')))
+    def infra_own(self):
+        self.declare(Fact(infra='Own'))
+
+    @Rule(AND(ProjectSpecs(q_lib='yes'), ProjectSpecs(q_anim='no')))
+    def ui_kit(self):
+        self.declare(Fact(ui='UI-Kit'))
+
+    @Rule(OR(ProjectSpecs(q_lib='no'), ProjectSpecs(q_anim='yes')))
+    def ui_custom(self):
+        self.declare(Fact(ui='Custom'))
+
+    @Rule(ProjectSpecs(q_store='no'))
+    def mobile_web(self):
+        self.declare(Fact(mobile='Web'))
+
+    @Rule(AND(ProjectSpecs(q_store='yes'), ProjectSpecs(native_req='no')))
+    def mobile_pwa(self):
+        self.declare(Fact(mobile='PWA'))
+
+    @Rule(AND(ProjectSpecs(q_store='yes'), ProjectSpecs(native_req='yes')))
+    def mobile_native(self):
+        self.declare(Fact(mobile='Native'))
+
+    # ==========================================
+    # УРОВЕНЬ 5: ИТОГОВЫЙ ВЫБОР
+    # ==========================================
+
+    @Rule(Fact(mobile='Native'))
     def rec_react_native(self):
-        self._print_result("REACT NATIVE + NEXT.JS", "Из-за требования доступа к железу телефона (камера/GPS) нужна нативная разработка.")
+        reason = (
+            "Вы выбрали публикацию в AppStore/GooglePlay и указали, что "
+            "требуется доступ к функциям мобильного телефона (например, камере, геопозиции или контактам). "
+            "Для таких задач нативная кроссплатформенная разработка с использованием **React Native** (или Flutter) "
+            "является наиболее подходящим решением. Это обеспечит и веб-версию (через React), и полноценные мобильные приложения."
+        )
+        self._print_result("React Native", reason)
 
-    @Rule(AND(Fact(render_mode='SSG'), Fact(mobile_strat='Web_Only')))
-    def rec_astro(self):
-        self._print_result("ASTRO", "Вам важен SEO, но система выявила слабую мощность клиентов (нужен легкий сайт). Astro отдает HTML без тяжелого JS.")
+    @Rule(AND(Fact(culture='reliable'), Fact(render='SPA')))
+    def rec_angular_spa(self):
+        reason = (
+            "**Angular (SPA)**\n"
+            "Поскольку SEO не требуется, но нужна надежная Enterprise-разработка с долговременной поддержкой "
+            "и сложной работой с данными, Angular (SPA) будет отличным вариантом для создания масштабируемых внутренних порталов или CRM."
+        )
+        self._print_result("Angular (SPA)", reason)
 
-    @Rule(AND(Fact(culture='strict'), Fact(state_arch='Complex')))
-    def rec_angular(self):
-        self._print_result("ANGULAR", "Сложная работа с данными и наличие времени/опыта требуют надежного Enterprise-фреймворка со строгим ООП.")
+    @Rule(AND(Fact(culture='fast'), Fact(render='SPA')))
+    def rec_vue_spa(self):
+        reason = (
+            "**Vue.js / React (SPA)**\n"
+            "SEO не требуется, открывается путь к классическому Single Page Application (SPA). "
+            "Благодаря выбору культуры «Быстро» (MVP, горят сроки), Vue.js или React (Vite) идеально подойдут "
+            "за счет мягкой кривой обучения и огромной экосистемы."
+        )
+        self._print_result("Vue.js / React (SPA)", reason)
 
-    @Rule(AND(Fact(culture='fast'), Fact(render_mode='SPA')))
-    def rec_vue(self):
-        self._print_result("VUE.JS / NUXT", "Идеально для быстрой разработки (MVP). Легкий вход, высокая скорость создания интерфейса.")
+    @Rule(AND(Fact(culture='reliable'), OR(Fact(render='SSG'), Fact(render='SSR'))))
+    def rec_angular_seo(self):
+        reason = (
+            "**Angular (SEO/SSG)**\n"
+            "Выбираем, если это Enterprise-портал (например, банковский сайт или кабинет госуслуг). "
+            "Да, там нужен SEO, но важнее — строгая типизация, архитектура «из коробки» и долгосрочная поддержка (Long Term Support).\n\n"
+            "*Критерий: Строгая архитектура + SEO.*"
+        )
+        self._print_result("Angular", reason)
 
-    @Rule(AND(Fact(infra_type='Serverless'), Fact(render_mode='SSR')))
+    @Rule(AND(Fact(team_cap='strong'), OR(Fact(render='SSG'), Fact(render='SSR'))))
     def rec_next(self):
-        self._print_result("NEXT.JS", "Вам нужно SSR для SEO и готовность к скачкам трафика при малом бюджете на сервера (Serverless Vercel).")
+        reason = (
+            "**Next.js (SEO/SSG)**\n"
+            "Это «золотой стандарт» для E-commerce и Маркетинга. Лучшая интеграция с облаками (Vercel) "
+            "и огромный выбор готовых библиотек.\n\n"
+            "*Критерий: Гибкая архитектура + Максимальный SEO + Популярный стек.*"
+        )
+        self._print_result("Next.js", reason)
+
+    @Rule(AND(Fact(culture='fast'), Fact(team_cap='weak'), OR(Fact(render='SSG'), Fact(render='SSR'))))
+    def rec_nuxt(self):
+        reason = (
+            "**Nuxt (SEO/SSG)**\n"
+            "Выбираем для быстрых контентных проектов и среднего бизнеса. У Nuxt лучший Developer Experience (DX) "
+            "— всё настраивается автоматически.\n\n"
+            "*Критерий: Скорость разработки + SEO + Малая команда.*"
+        )
+        self._print_result("Nuxt", reason)
+
+    @Rule(Fact(render='SSG'))
+    def rec_astro(self):
+        reason = (
+            "**Astro (SSG)**\n"
+            "Выбираем, когда Производительность выше всего. Он выдает «Zero JS» на клиенте. "
+            "Если это лендинг или статический каталог, где каждая миллисекунда — это деньги, Astro побеждает всех.\n\n"
+            "*Критерий: Контентный сайт + Критическая скорость.*"
+        )
+        self._print_result("Astro", reason)
 
     def _print_result(self, stack, reason):
         self.recommendations.append({"stack": stack, "reason": reason})
-        print("\n" + "="*50)
-        print(f"РЕКОМЕНДУЕМЫЙ СТЕК ТЕХНОЛОГИЙ: {stack}")
-        print(f"Обоснование ЭС: {reason}")
-        print("="*50 + "\n")
+        print(f"\n[ РЕЗУЛЬТАТ ] {stack}")

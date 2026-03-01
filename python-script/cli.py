@@ -1,14 +1,16 @@
 import time
 from engine import FrontendExpert, ProjectSpecs
 
-def ask(question, option1, option2):
+def ask(question, option1, val1, option2, val2):
     print(f"\n{question}")
     print(f"1) {option1}")
     print(f"2) {option2}")
     while True:
         ans = input("Ваш выбор (1/2): ").strip()
-        if ans in ['1', '2']:
-            return ans
+        if ans == '1':
+            return val1
+        elif ans == '2':
+            return val2
         print("Ошибка. Введите 1 или 2.")
 
 def start_expert_system():
@@ -17,33 +19,40 @@ def start_expert_system():
     
     answers = {}
     
-    answers['region'] = ask("Где живут ваши пользователи?", "В одной стране/регионе", "По всему миру")
-    answers['env'] = ask("Как чаще заходят на сайт?", "Из дома/офиса (надежный интернет)", "На бегу/в транспорте")
-    answers['device'] = ask("Основной тип устройств?", "Мобильные телефоны", "Компьютеры / Ноутбуки")
-    answers['content_heavy'] = ask("Много ли на сайте тяжелого контента (видео/анимации)?", "Да, много", "Нет, в основном текст и картинки")
-    
-    answers['real_time'] = ask("Нужен ли живой чат или мгновенное обновление цен?", "Да", "Нет")
-    answers['offline'] = ask("Должен ли сайт работать без интернета?", "Да", "Нет")
-    
-    answers['budget'] = ask("Какой бюджет на сервера?", "Большой (свои сервера)", "Маленький (облачный хостинг)")
-    answers['traffic'] = ask("Ожидаются ли резкие скачки посетителей?", "Да (Например, в Черную пятницу)", "Нет, трафик стабильный")
-    
-    answers['design'] = ask("Есть ли готовый UI-шаблон/дизайн?", "Да, используем готовый", "Нет, рисуем всё с нуля")
-    answers['anim'] = ask("Будут ли сложные 3D-эффекты?", "Да", "Нет")
-    
-    answers['team_size'] = ask("Каков размер вашей команды?", "Большая (от 4 человек)", "Маленькая (1-3 человека)")
-    answers['team_exp'] = ask("Есть ли в команде опытные Senior-разработчики?", "Да", "Нет")
-    
-    answers['seo'] = ask("Важно ли продвижение в поисковиках (SEO)?", "Критично важно", "Не важно")
-    answers['deadline'] = ask("Горят ли сроки?", "Да, нужно быстрее сделать MVP", "Нет, есть время сделать качественно")
+    # 1. Аудитория и География
+    answers['q_region'] = ask("Где живут пользователи?", "Один регион", 'region', "Весь мир", 'world')
+    answers['q_env'] = ask("Откуда заходят?", "Из офиса/Дома", 'office', "На бегу/Транспорт", 'transport')
 
-    answers['is_mobile'] = ask("Планируется ли мобильное приложение?", "Да", "Нет")
-    
-    # ПРОПУСКАЕМАЯ ВЕТКА (Только если нужно моб. приложение)
-    if answers['is_mobile'] == '1':
-        answers['native_req'] = ask("Требуется ли доступ к железу (Камера, GPS, Пуши)?", "Да", "Нет")
+    # 2. Устройства и Контент
+    answers['q_dev'] = ask("Основное устройство?", "ПК/Ноутбуки", 'pc', "Телефоны", 'phone')
+    answers['q_content'] = ask("Тяжелый контент?", "Текст", 'text', "Много видео", 'video')
+
+    # 3. Команда и Ресурсы
+    answers['q_size'] = ask("Размер команды?", "Много людей", 'many', "Мало людей", 'few')
+    answers['q_exp'] = ask("Есть опытные профи?", "Есть Senior", 'yes', "Нет опытных", 'no')
+
+    # 4. Бизнес-требования
+    answers['q_seo'] = ask("Нужно продвижение в поиске?", "Да (Важно)", 'yes', "Нет", 'no')
+    answers['q_time'] = ask("Сроки горят?", "Есть время", 'time', "Срочно", 'urgent')
+
+    # 5. Работа с данными (State)
+    answers['q_real'] = ask("Нужен мгновенный чат?", "Нет", 'no', "Да", 'yes')
+    answers['q_offline'] = ask("Нужна работа без интернета?", "Нет", 'no', "Да", 'yes')
+
+    # 6. Сервера и Нагрузка
+    answers['q_host'] = ask("Бюджет на сервера?", "Большой", 'much', "Ограниченный", 'little')
+    answers['q_traffic'] = ask("Будут скачки посетителей?", "Нет", 'no', "Да", 'yes')
+
+    # 7. Дизайн UI
+    answers['q_lib'] = ask("Есть готовый дизайн?", "Да", 'yes', "Нет", 'no')
+    answers['q_anim'] = ask("Сложные 3D эффекты?", "Нет", 'no', "Да", 'yes')
+
+    # 8. Мобильность
+    answers['q_store'] = ask("Нужна публикация в AppStore/GooglePlay?", "Нет", 'no', "Да", 'yes')
+    if answers['q_store'] == 'yes':
+        answers['native_req'] = ask("Требуется ли доступ к телефону (Камера/Гео/Контакты)?", "Не нужен", 'no', "Нужен", 'yes')
     else:
-        answers['native_req'] = '2'
+        answers['native_req'] = 'no'
 
     print("\n" + "*"*50)
     print("ЗАПУСК ДВИЖКА ЛОГИЧЕСКОГО ВЫВОДА...")
@@ -54,6 +63,9 @@ def start_expert_system():
     engine.reset()
     engine.declare(ProjectSpecs(**answers))
     engine.run()
+    
+    if not engine.recommendations:
+        print("\n[ ОШИБКА ] Система не смогла подобрать архитектуру по введенным параметрам (нет подходящего исхода).")
 
 if __name__ == "__main__":
     start_expert_system()
