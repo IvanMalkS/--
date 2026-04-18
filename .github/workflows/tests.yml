@@ -4,13 +4,20 @@ on:
   pull_request:
     branches:
       - master
+      - 'feat/*'
+      - 'fix/*'
   push:
     branches:
       - master
+      - 'feat/*'
+      - 'fix/*'
 
 jobs:
   run-tests:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: IKM
 
     steps:
       - name: Checkout code

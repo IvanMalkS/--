@@ -7,12 +7,12 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_curve, auc, precision_recall_curve
 from imblearn.over_sampling import SMOTE
 
 DATA_PATH = "data/WA_Fn-UseC_-Telco-Customer-Churn.csv"
 MODEL_PATH = "models/churn_model.pkl"
-ERROR_PLOT_PATH = "error_analysis.png"
+PLOTS_DIR = "models/plots"
 
 def load_and_preprocess_data(file_path):
     print(f"Загрузка данных из {file_path}...")
@@ -35,6 +35,55 @@ def train_baseline(df):
     acc = accuracy_score(y_true, y_pred)
     print(f"Accuracy baseline модели: {acc:.4f}")
     return acc
+
+def save_plots(best_model, X_test, y_test, final_acc):
+    os.makedirs(PLOTS_DIR, exist_ok=True)
+    y_pred = best_model.predict(X_test)
+    y_prob = best_model.predict_proba(X_test)[:, 1]
+
+    plt.figure(figsize=(8, 6))
+    cm = confusion_matrix(y_test, y_pred)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.title(f'Confusion Matrix (Accuracy: {final_acc:.4f})')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.savefig(f"{PLOTS_DIR}/confusion_matrix.png")
+    plt.close()
+
+    fpr, tpr, _ = roc_curve(y_test, y_prob)
+    roc_auc = auc(fpr, tpr)
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic (ROC)')
+    plt.legend(loc="lower right")
+    plt.savefig(f"{PLOTS_DIR}/roc_curve.png")
+    plt.close()
+
+    precision, recall, _ = precision_recall_curve(y_test, y_prob)
+    plt.figure(figsize=(8, 6))
+    plt.plot(recall, precision, color='blue', lw=2)
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curve')
+    plt.savefig(f"{PLOTS_DIR}/pr_curve.png")
+    plt.close()
+    
+    importances = best_model.feature_importances_
+    features = X_test.columns
+    feat_imp = pd.Series(importances, index=features).sort_values(ascending=False)
+    plt.figure(figsize=(10, 8))
+    sns.barplot(x=feat_imp.values, y=feat_imp.index, palette='viridis')
+    plt.title('Feature Importances')
+    plt.xlabel('Importance Score')
+    plt.savefig(f"{PLOTS_DIR}/feature_importance.png")
+    plt.close()
+
+    print(f"Все графики сохранены в директорию {PLOTS_DIR}")
 
 def train_main_model(df):
     print("\n--- Основная модель: RandomForestClassifier с SMOTE ---")
@@ -87,6 +136,8 @@ def train_main_model(df):
     print("\nОтчет о классификации:")
     print(classification_report(y_test, y_pred))
     
+    save_plots(best_model, X_test, y_test, final_acc)
+    
     artifacts = {
         'model': best_model,
         'scaler': None,
@@ -101,12 +152,7 @@ def train_main_model(df):
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
     with open(MODEL_PATH, 'wb') as f:
         pickle.dump(artifacts, f)
-    
-    plt.figure(figsize=(10, 8))
-    cm = confusion_matrix(y_test, y_pred)
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.title(f'Confusion Matrix (Accuracy: {final_acc:.4f})')
-    plt.savefig(ERROR_PLOT_PATH)
+    print(f"Модель сохранена в {MODEL_PATH}")
 
 def check_existing_model(threshold=0.79):
     if os.path.exists(MODEL_PATH):

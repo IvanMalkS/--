@@ -4,11 +4,12 @@
 
 ## Структура проекта
 - `data/` — исходные данные (`WA_Fn-UseC_-Telco-Customer-Churn.csv`).
-- `models/` — сохраненные артефакты модели (`.pkl`).
+- `models/` — сохраненные артефакты модели (`.pkl`) и графики (`plots/`).
 - `src/` — исходный код:
   - `train.py` — скрипт обучения модели.
   - `app.py` — интерфейс на Streamlit.
-- `tests/` — модульные тесты.
+- `tests/` — модульные и e2e тесты.
+- `.github/workflows/` — CI/CD пайплайны.
 - `pyproject.toml` — управление зависимостями через `uv`.
 
 ## Установка и запуск
@@ -31,7 +32,7 @@ uv sync
 ```bash
 uv run src/train.py
 ```
-После выполнения в консоли появится отчет, а в корне проекта сохранится файл `error_analysis.png`. Модель сохранится в `models/churn_model.pkl`.
+После выполнения в консоли появится отчет, а в `models/plots/` сохранятся графики анализа (ROC, PR-curve, Confusion Matrix, Feature Importance). Модель сохранится в `models/churn_model.pkl`.
 
 ### 3. Запуск веб-интерфейса
 Запустите Streamlit приложение:
